@@ -1,0 +1,15 @@
+{
+  "name": "WxMon — Weather Monitor",
+  "short_name": "WxMon",
+  "description": "NWS live high/low tracker with 3-source consensus",
+  "start_url": "/WeatherApp/index.html",
+  "scope": "/WeatherApp/",
+  "display": "standalone",
+  "background_color": "#080c10",
+  "theme_color": "#080c10",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "/WeatherApp/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/WeatherApp/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
