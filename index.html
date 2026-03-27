@@ -388,23 +388,29 @@ async function fetchNWS(city){
   const nWP=kmhToMph(avg(windowVals(wdV,city.tz,20,8,tS,tmS)));
   const nPr=maxArr(windowVals(prV,city.tz,20,8,tS,tmS));
   const dpC=closest(dpV,now.getTime());
-  // Obs — latest + today's history for recorded high/low
+  // Obs — latest + today's official station observations (start=UTC midnight today)
   const stId=st.features?.[0]?.properties?.stationIdentifier;
   if(!stId)throw new Error('No station');
+  // UTC midnight today — all US timezones are UTC-4 to UTC-10 so this always
+  // precedes local midnight, capturing the full local calendar day
+  const todayUTCStart=new Date().toISOString().split('T')[0]+'T00:00:00Z';
   const [obs, obsHist] = await Promise.all([
-    fetch(`https://api.weather.gov/stations/${stId}/observations/latest`,{headers:H}).then(r=>{if(!r.ok)throw new Error(`Obs ${r.status}`);return r.json();}),
-    fetch(`https://api.weather.gov/stations/${stId}/observations?limit=48`,{headers:H}).then(r=>r.ok?r.json():null).catch(()=>null),
+    fetch(`https://api.weather.gov/stations/${stId}/observations/latest`,{headers:H})
+      .then(r=>{if(!r.ok)throw new Error(`Obs ${r.status}`);return r.json();}),
+    fetch(`https://api.weather.gov/stations/${stId}/observations?start=${todayUTCStart}&limit=24`,{headers:H})
+      .then(r=>r.ok?r.json():null).catch(()=>null),
   ]);
   const rawC=obs.properties?.temperature?.value;
   const wObs=obs.properties?.windSpeed?.value!=null?Math.round(obs.properties.windSpeed.value*2.237):null;
-  // Scan history for today's recorded high/low
+  // Scan today's official station obs for recorded high/low
+  // All readings are already scoped to today via the start= param;
+  // secondary localDateStr filter guards against any UTC-boundary edge cases
   let recHigh=null,recHighTime=null,recLow=null,recLowTime=null;
   if(obsHist?.features){
     for(const f of obsHist.features){
       const t=f.properties?.temperature?.value;
       const ts=f.properties?.timestamp;
       if(t==null||ts==null)continue;
-      // Only include readings from today (local date)
       if(localDateStr(new Date(ts),city.tz)!==tS)continue;
       const fF=cToF(t);
       if(recHigh==null||fF>recHigh){recHigh=fF;recHighTime=ts;}
