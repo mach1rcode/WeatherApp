@@ -419,11 +419,9 @@ async function fetchNWS(city){
       const ts=f.properties?.timestamp;
       if(t==null||ts==null)continue;
       const fF=cToF(t);
-      // High: only count readings from today (don't let yesterday's high contaminate)
-      if(localDateStr(new Date(ts),city.tz)===tS){
-        if(recHigh==null||fF>recHigh){recHigh=fF;recHighTime=ts;}
-      }
-      // Low: use full window including pre-midnight readings to capture overnight trough
+      // Both high and low: only count readings from today
+      if(localDateStr(new Date(ts),city.tz)!==tS)continue;
+      if(recHigh==null||fF>recHigh){recHigh=fF;recHighTime=ts;}
       if(recLow==null||fF<recLow){recLow=fF;recLowTime=ts;}
     }
   }
