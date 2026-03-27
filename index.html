@@ -391,13 +391,15 @@ async function fetchNWS(city){
   // Obs — latest + today's official station observations (start=UTC midnight today)
   const stId=st.features?.[0]?.properties?.stationIdentifier;
   if(!stId)throw new Error('No station');
-  // UTC midnight today — all US timezones are UTC-4 to UTC-10 so this always
-  // precedes local midnight, capturing the full local calendar day
+  // UTC midnight today — all US timezones are UTC-4 to UTC-10 so UTC midnight
+  // always precedes local midnight, capturing the full local calendar day.
+  // limit=100 handles stations that report more frequently than hourly (special obs)
+  // which would cause limit=24 to cut off early-morning low readings in descending order
   const todayUTCStart=new Date().toISOString().split('T')[0]+'T00:00:00Z';
   const [obs, obsHist] = await Promise.all([
     fetch(`https://api.weather.gov/stations/${stId}/observations/latest`,{headers:H})
       .then(r=>{if(!r.ok)throw new Error(`Obs ${r.status}`);return r.json();}),
-    fetch(`https://api.weather.gov/stations/${stId}/observations?start=${todayUTCStart}&limit=24`,{headers:H})
+    fetch(`https://api.weather.gov/stations/${stId}/observations?start=${todayUTCStart}&limit=100`,{headers:H})
       .then(r=>r.ok?r.json():null).catch(()=>null),
   ]);
   const rawC=obs.properties?.temperature?.value;
