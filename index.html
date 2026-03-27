@@ -391,29 +391,11 @@ async function fetchNWS(city){
   // Obs — latest + today's official station observations (start=UTC midnight today)
   const stId=st.features?.[0]?.properties?.stationIdentifier;
   if(!stId)throw new Error('No station');
-  // Compute UTC equivalent of local midnight for this city's timezone.
-  // A fixed UTC midnight would include yesterday-evening obs for western cities.
-  // Strategy: step back from now in 1-hour increments until we cross local midnight.
-  const localMidnightUTC=(()=>{
-    const now=new Date();
-    // Format today's local date string (YYYY-MM-DD) in the city's timezone
-    const todayLocal=new Intl.DateTimeFormat('en-CA',{timeZone:city.tz}).format(now);
-    // Binary-style: walk back through today until we find the UTC ms where local date flips
-    // Simple approach: subtract hours until the local date changes, then add one back
-    let candidate=new Date(now);
-    candidate.setUTCHours(0,0,0,0); // start from UTC midnight as initial guess
-    // Nudge forward hour by hour until local date matches today
-    for(let i=0;i<24;i++){
-      const localDate=new Intl.DateTimeFormat('en-CA',{timeZone:city.tz}).format(candidate);
-      if(localDate===todayLocal) break;
-      candidate=new Date(candidate.getTime()+3600000);
-    }
-    return candidate.toISOString();
-  })();
+  const localMidnightUTC=new Date().toISOString().split('T')[0]+'T00:00:00Z';
   const [obs, obsHist] = await Promise.all([
     fetch(`https://api.weather.gov/stations/${stId}/observations/latest`,{headers:H})
       .then(r=>{if(!r.ok)throw new Error(`Obs ${r.status}`);return r.json();}),
-    fetch(`https://api.weather.gov/stations/${stId}/observations?start=${encodeURIComponent(localMidnightUTC)}&limit=100`,{headers:H})
+    fetch(`https://api.weather.gov/stations/${stId}/observations?start=${localMidnightUTC}&limit=100`,{headers:H})
       .then(r=>r.ok?r.json():null).catch(()=>null),
   ]);
   const rawC=obs.properties?.temperature?.value;
