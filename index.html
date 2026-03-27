@@ -214,18 +214,26 @@ if (window.navigator.standalone || localStorage.getItem('wxmon-banner-dismissed'
 
 // ── Cities ─────────────────────────────────────────────────
 const CITIES = [
-  {name:"Dallas",      state:"TX", lat:32.84,  lon:-96.85,  tz:"America/Chicago"},
-  {name:"Phoenix",     state:"AZ", lat:33.45,  lon:-112.07, tz:"America/Phoenix"},
-  {name:"New York",    state:"NY", lat:40.71,  lon:-74.01,  tz:"America/New_York"},
-  {name:"Chicago",     state:"IL", lat:41.85,  lon:-87.65,  tz:"America/Chicago"},
-  {name:"Los Angeles", state:"CA", lat:33.94,  lon:-118.41, tz:"America/Los_Angeles"},
-  {name:"Miami",       state:"FL", lat:25.79,  lon:-80.29,  tz:"America/New_York"},
-  {name:"Atlanta",     state:"GA", lat:33.63,  lon:-84.44,  tz:"America/New_York"},
-  {name:"Denver",      state:"CO", lat:39.85,  lon:-104.66, tz:"America/Denver"},
-  {name:"Seattle",     state:"WA", lat:47.45,  lon:-122.31, tz:"America/Los_Angeles"},
-  {name:"Boston",      state:"MA", lat:42.36,  lon:-71.01,  tz:"America/New_York"},
-  {name:"Houston",     state:"TX", lat:29.98,  lon:-95.34,  tz:"America/Chicago"},
-  {name:"Las Vegas",   state:"NV", lat:36.08,  lon:-115.15, tz:"America/Los_Angeles"},
+  {name:"Atlanta",      state:"GA", lat:33.63,  lon:-84.44,  tz:"America/New_York"},
+  {name:"Austin",       state:"TX", lat:30.19,  lon:-97.67,  tz:"America/Chicago"},
+  {name:"Boston",       state:"MA", lat:42.36,  lon:-71.01,  tz:"America/New_York"},
+  {name:"Chicago",      state:"IL", lat:41.85,  lon:-87.65,  tz:"America/Chicago"},
+  {name:"Dallas",       state:"TX", lat:32.84,  lon:-96.85,  tz:"America/Chicago"},
+  {name:"Denver",       state:"CO", lat:39.85,  lon:-104.66, tz:"America/Denver"},
+  {name:"Detroit",      state:"MI", lat:42.21,  lon:-83.35,  tz:"America/Detroit"},
+  {name:"Houston",      state:"TX", lat:29.98,  lon:-95.34,  tz:"America/Chicago"},
+  {name:"Las Vegas",    state:"NV", lat:36.08,  lon:-115.15, tz:"America/Los_Angeles"},
+  {name:"Los Angeles",  state:"CA", lat:33.94,  lon:-118.41, tz:"America/Los_Angeles"},
+  {name:"Miami",        state:"FL", lat:25.79,  lon:-80.29,  tz:"America/New_York"},
+  {name:"Minneapolis",  state:"MN", lat:44.88,  lon:-93.22,  tz:"America/Chicago"},
+  {name:"New Orleans",  state:"LA", lat:29.99,  lon:-90.26,  tz:"America/Chicago"},
+  {name:"New York",     state:"NY", lat:40.71,  lon:-74.01,  tz:"America/New_York"},
+  {name:"Oklahoma City",state:"OK", lat:35.39,  lon:-97.60,  tz:"America/Chicago"},
+  {name:"Philadelphia", state:"PA", lat:39.87,  lon:-75.24,  tz:"America/New_York"},
+  {name:"Phoenix",      state:"AZ", lat:33.45,  lon:-112.07, tz:"America/Phoenix"},
+  {name:"San Antonio",  state:"TX", lat:29.53,  lon:-98.47,  tz:"America/Chicago"},
+  {name:"San Francisco",state:"CA", lat:37.62,  lon:-122.38, tz:"America/Los_Angeles"},
+  {name:"Seattle",      state:"WA", lat:47.45,  lon:-122.31, tz:"America/Los_Angeles"},
 ];
 
 let cityData={}, currentSort='name', loadedCount=0;
@@ -237,6 +245,14 @@ function localHourOf(d,tz){try{return parseInt(new Intl.DateTimeFormat('en-US',{
 function localDateStr(d,tz){try{return new Intl.DateTimeFormat('en-US',{timeZone:tz,month:'2-digit',day:'2-digit',year:'numeric'}).format(d);}catch{return '';}}
 function getLocalTime(tz){try{return new Intl.DateTimeFormat('en-US',{timeZone:tz,hour:'numeric',minute:'2-digit',hour12:true}).format(new Date());}catch{return '—';}}
 function fmtTime(iso){if(!iso)return'—';try{return new Date(iso).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});}catch{return'—';}}
+// Format a local 0-23 hour as "~3 PM"
+function fmtHour(hr){
+  if(hr==null||hr===undefined)return'?';
+  const h=((hr%24)+24)%24;
+  if(h===0)  return '~12 AM';
+  if(h===12) return '~12 PM';
+  return h<12 ? '~'+h+' AM' : '~'+(h-12)+' PM';
+}
 
 // ── Grid parsing ───────────────────────────────────────────
 function parseGridProp(p){
@@ -427,7 +443,7 @@ function renderCard(city,data,loading,error){
         <div class="temp-meta"><div class="temp-condition">${data.desc||'—'}</div><div class="temp-obstime">obs @ ${fmtTime(data.timestamp)}</div></div>
       </div>
       <table class="source-table">
-        <thead><tr><th>Src</th><th>High</th><th>Low</th></tr></thead>
+        <thead><tr><th>Src</th><th>High <span style="color:var(--amber);font-weight:400;text-transform:none;letter-spacing:0;">(${fmtHour(data.peakHr)})</span></th><th>Low <span style="color:var(--cyan);font-weight:400;text-transform:none;letter-spacing:0;">(${fmtHour(data.troughHr)})</span></th></tr></thead>
         <tbody>
           <tr><td><span class="source-tag tag-hourly">H</span></td><td class="t-high">${fmt(data.src_hourly_high)}</td><td class="t-low">${fmt(data.src_hourly_low)}</td></tr>
           <tr><td><span class="source-tag tag-grid">G</span></td><td class="t-high">${fmt(data.src_grid_high)}</td><td class="t-low">${fmt(data.src_grid_low)}</td></tr>
